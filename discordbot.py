@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-import gspread #$ pip install gspread
+import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import datetime
 import os
