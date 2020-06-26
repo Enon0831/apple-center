@@ -12,6 +12,7 @@ scope = ['https://spreadsheets.google.com/feeds',
 credentials = ServiceAccountCredentials.from_json_keyfile_name('test-python-275700-5f70ae0934df.json', scope)
 gc = gspread.authorize(credentials)
 SPREADSHEET_KEY = "1t1jtRXdBAWPi-xm21LhZ61CioOyzFaNChBNbud2V1lg"
+
 wkb = gc.open_by_key(SPREADSHEET_KEY)
 wks1 = wkb.worksheet("ID検索") #ID検索
 wks2 = wkb.worksheet("操作用シート")
