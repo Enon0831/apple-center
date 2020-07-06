@@ -17,6 +17,7 @@ wkb = gc.open_by_key(SPREADSHEET_KEY)
 wks1 = wkb.worksheet("ID検索") #ID検索
 wks2 = wkb.worksheet("操作用シート")
 wks3 = wkb.worksheet("退団ID")
+wks4 = wkb.worksheet("退団理由")
 
 #discord情報欄
 bot = commands.Bot(command_prefix='!')
@@ -70,13 +71,31 @@ async def ml(ctx):
 async def info(ctx,*args):
     data = get_List()
     
-    m = "**Player Info**\n```\n" +\
-        "Name:" + data[int(args[0])-1]["Name"] + "\n" +\
-        "ID:" + data[int(args[0])-1]["ID"] + "\n" +\
-        "MaxStage:" + data[int(args[0])-1]["MaxStage"] + "\n" +\
-        "Rejoin:" + str(data[int(args[0])-1]["Name"].count("＊")) + "回目\n" +\
-        "```"
-    await ctx.send(m)
+    embed=discord.Embed(title="__***Player Info***__",color=0xee1111)
+    embed.add_field(name="Name", value=data[int(args[0])-1]["Name"], inline=False)
+    embed.add_field(name="ID", value=data[int(args[0])-1]["ID"], inline=True)
+    embed.add_field(name="MaxStage", value=data[int(args[0])-1]["MaxStage"], inline=True)
+    embed.add_field(name="Rejoin", value=str(data[int(args[0])-1]["Name"].count("＊")) + "回目", inline=True)
+    if data[int(args[0])-1]["Name"].count("＊") == 0:
+        embed.add_field(name="Reason for leaving", value="なし", inline=True)
+    else:
+        search_ID = wks4.range("A1:A1000")
+        for i in range(len(search_ID)):
+            search_ID[i] = search_ID[i].value
+            if search_ID[i] == data[int(args[0])-1]["ID"]:
+                num = i + 1
+                break
+        
+        m = ""
+        for i in range(25):
+            value = wks4.cell(num,2+i).value
+            if value == "":
+                break
+            m = m + value + "\n"
+
+        embed.add_field(name="Reason for leaving", value=m, inline=False)
+
+    await ctx.send(embed=embed)
 # -------------------------------------------------------------------------------------------------------------
 
 ### MS update
@@ -146,28 +165,46 @@ async def active(ctx,*args):
 ### メンバー削除
 @bot.command()
 async def delete(ctx,*args):
-    data = get_List()
-    
-    # A:name , B:ID , C:MS
-    up_ID = wks2.range("B1:B1000")
-    for i in range(len(up_ID)):
-        up_ID[i] = up_ID[i].value
-        if up_ID[i] == data[int(args[0])-1]["ID"]:
-            break
-    num = up_ID.index(data[int(args[0])-1]["ID"])
-    for i in range(4):
-        wks2.update_cell(num+1,2+i,"")
-    
-    out_ID = wks3.range("A1:A1000")
-    for i in range(len(out_ID)):
-        if out_ID[i].value == "":
-            pos = i + 1
-            break
-    wks3.update_cell(pos,1,data[int(args[0])-1]["ID"])
-    m = "```\n" +\
-        data[int(args[0])-1]["Name"] + "を除名しました\n" +\
-        "```" 
-    await ctx.send(m)
+    if len(args) == 2:
+        data = get_List()
+        
+        # A:name , B:ID , C:MS
+        up_ID = wks2.range("B1:B1000")
+        for i in range(len(up_ID)):
+            up_ID[i] = up_ID[i].value
+            if up_ID[i] == data[int(args[0])-1]["ID"]:
+                break
+        num = up_ID.index(data[int(args[0])-1]["ID"])
+        for i in range(4):
+            wks2.update_cell(num+1,2+i,"")
+        
+        out_ID = wks3.range("A1:A1000")
+        for i in range(len(out_ID)):
+            if out_ID[i].value == "":
+                pos = i + 1
+                break
+        wks3.update_cell(pos,1,data[int(args[0])-1]["ID"])
+        wks3.update_cell(pos,2,args[1])
+
+        search_ID = wks4.range("A1:A1000")
+        for i in range(len(search_ID)):
+            search_ID[i] = search_ID[i].value
+            if search_ID[i] == data[int(args[0])-1]["ID"]:
+                num = i + 1
+                break
+            elif search_ID[i] == "":
+                break
+        
+        for i in range(25):
+            value = wks4.cell(num,2+i).value
+            if value == "":
+                wks4.update_cell(num,2+i,args[1])
+                break
+
+        m = "```\n" +\
+            data[int(args[0])-1]["Name"] + "を除名しました\n" +\
+            "```" 
+        await ctx.send(m)
 # -------------------------------------------------------------------------------------------------------------
 
 ### メンバー登録
@@ -213,7 +250,7 @@ async def hlp(ctx,*args):
         "!add <name> <ID> <MaxStage>\n" +\
         "> メンバーの登録\n" +\
         "\n" + \
-        "!delete <rank>\n" +\
+        "!delete <rank> <reason>\n" +\
         "> メンバーの除名\n" +\
         "```"
     await ctx.send(m)
