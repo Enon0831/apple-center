@@ -88,7 +88,7 @@ async def info(ctx,*args):
         
         m = ""
         for i in range(25):
-            value = wks4.cell(num,2+i).value
+            value = wks4.cell(num,3+i).value
             if value == "":
                 break
             m = m + value + "\n"
@@ -195,17 +195,18 @@ async def delete(ctx,*args):
             elif search_ID[i] == "":
                 break
         
+        wks4.update_cell(num,2,data[int(args[0])-1]["Name"])
         for i in range(25):
-            value = wks4.cell(num,2+i).value
+            value = wks4.cell(num,3+i).value
             if value == "":
-                wks4.update_cell(num,2+i,args[1])
+                wks4.update_cell(num,3+i,args[1])
                 break
 
         m = "```\n" +\
             data[int(args[0])-1]["Name"] + "を除名しました\n" +\
             "```" 
     else:
-        m = "ランク、又は退団理由を記入してください"
+        m = "ランク又は退団理由を記入してください"
     await ctx.send(m)
 # -------------------------------------------------------------------------------------------------------------
 
@@ -223,9 +224,37 @@ async def add(ctx,*args):
         wks2.update_cell(pos,3,args[2])
         wks2.update_cell(pos,4,"活動中")
         wks2.update_cell(pos,5,args[0])
-    m = "```\n" +\
-        args[0] + "を登録しました\n" +\
-        "```" 
+
+        num = 0
+        search_ID = wks4.range("A1:A1000")
+        for i in range(len(search_ID)):
+            search_ID[i] = search_ID[i].value
+            if search_ID[i] == args[1]:
+                num = i + 1
+                break
+            elif search_ID[i] == "":
+                break
+        
+        name = ""
+        if num == 0:
+            pass
+        else:
+            name = wks4.cell(num,2).value
+
+        if name == "":
+            m = "```\n" +\
+                args[0] + "を登録しました\n" +\
+                "```" 
+        else:
+            m = "```\n" +\
+                args[0] + "を登録しました\n" +\
+                "以前の名前は" + name + "です\n" +\
+                "```" 
+    else:
+        m = "```\n" +\
+            "情報が足りません\n" +\
+            "```"
+        
     await ctx.send(m)
 # -------------------------------------------------------------------------------------------------------------
 
